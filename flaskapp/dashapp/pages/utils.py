@@ -54,7 +54,7 @@ def own_nav_top():
         dbc.Container([
             html.A(
                 dbc.Row([
-                    dbc.Col(html.Img(src='/dashapp/assets/logo-ccrre.png', height="30px")),
+                    dbc.Col(html.Img(src='/dashapp/assets/logo-ccr-re.png', height="30px")),
                     dbc.Col(dbc.NavbarBrand('SLy', className="ms-2")),
                 ],
                     align='center',
