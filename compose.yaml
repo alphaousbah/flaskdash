@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    environment:
+      SECRET_KEY: b250d7ab90b5db4141291979a26714d1328f1b5eddb7421e2de8bb6f02581c08
+      POSTGRES_HOST: db:5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    ports:
+      - 5000:5000    
+    depends_on:
+      db:
+        condition: service_healthy
+        
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:      
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -t 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  pgdata:

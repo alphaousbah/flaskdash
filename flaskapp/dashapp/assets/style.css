@@ -1,0 +1,65 @@
+/* Variables */
+:root {
+  --font-size: 13.5px;
+  --background-color: #f5f8fa;
+  --border-color: #d5e0e5;
+}
+
+body {
+    font-size: var(--font-size);
+    background-color: var(--background-color);
+}
+
+.nav_top {
+    height: 40px;
+}
+
+.title {
+    margin: 0;
+    padding-top: 6px;
+    padding-bottom: 10px;
+    padding-left: 22px;
+    background-color: white;
+    border-bottom: 0.5px solid var(--border-color);
+}
+
+.nav_middle {
+    background-color: white;
+    border-bottom: 0.5px solid var(--border-color);
+}
+
+.nav_bottom {
+    background-color: white;
+    background-color: var(--background-color);
+    border-bottom: 0.5px solid var(--border-color);
+}
+
+.div-standard {
+    margin: 0;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.button {
+    font-size: var(--font-size);
+    margin-bottom: 15px;
+    margin-right: 10px;
+}
+
+.card {
+    border-radius: 5px;
+}
+
+.input_text {
+    font-size: var(--font-size);
+}
+
+.ag-theme-alpine.custom {
+    --ag-font-size: 13px;
+}
+
+.ag-theme-alpine .ag-header-cell {
+    font-size: 13px;
+}
