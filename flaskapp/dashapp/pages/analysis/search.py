@@ -52,22 +52,53 @@ def layout():
     ]),
 
 
-# TODO: Add a modal to ask the user to confirm the deletion
+# rowTransaction: https://dash.plotly.com/dash-ag-grid/client-side
+@callback(
+    Output(page_id + 'grid-analyses', 'rowTransaction', allow_duplicate=True),
+    Input(page_id + 'btn-copy', 'n_clicks'),
+    State(page_id + 'grid-analyses', 'selectedRows'),
+    config_prevent_initial_callbacks=True
+)
+def copy_analyses(n_clicks, selectedRows):
+    if n_clicks is None or selectedRows is None:
+        return no_update
+
+    # Copy the selected analyses
+    newRows = []
+    for row in selectedRows:
+        analysis_id = row['id']
+        analysis = db.session.get(Analysis, analysis_id)
+        new = analysis.copy()
+        db.session.add(new)
+        db.session.commit()  # Commit in the loop to get the analysis_copy.id
+        newRows.append(
+            {
+                'id': '[' + str(new.id) + '](/dashapp/analysis/view/' + str(new.id) + ')',
+                'name': '[' + new.name + '](/dashapp/analysis/view/' + str(new.id) + ')',
+                'quote': new.quote,
+                'client': new.client
+            }
+        )
+    # Update the analyses grid
+    return {'add': newRows}
+
+
 @callback(
     Output(page_id + 'grid-analyses', 'rowTransaction'),
     Input(page_id + 'btn-delete', 'n_clicks'),
     State(page_id + 'grid-analyses', 'selectedRows'),
 )
-def delete_analysis(n_clicks, selectedRows):
+def delete_analyses(n_clicks, selectedRows):
     if n_clicks is None or selectedRows is None:
         return no_update
 
-    # Delete selected analyses
+    # Delete the selected analyses
     for row in selectedRows:
         analysis_id = row['id']
         analysis = db.session.get(Analysis, analysis_id)
         db.session.delete(analysis)
     db.session.commit()  # Commit after the loop for DB performance
 
+    # TODO: Add a modal to ask the user to confirm the deletion
     # Update the analyses grid
     return {'remove': selectedRows}

@@ -2,6 +2,7 @@
 Commands for testing:
 
 rm .\migrations\; flask db init; flask db migrate; flask db upgrade; python
+$env:POSTGRES_HOST='localhost'; $env:POSTGRES_USER='postgres'; $env:POSTGRES_PASSWORD='a'; $env:POSTGRES_DB='app_db'; $env:SECRET_KEY='38ee1bfef77c029614cc87c3ac922f2de08f44cd75ed6e41f31477f831a1cef4'
 from app import app; app.app_context().push(); from flaskapp.extensions import *; from flaskapp.models import *; session = db.session
 
 
@@ -48,6 +49,7 @@ Relationships between the models:
 
 
 Resources:
+- Duplicate records: https://stackoverflow.com/questions/44061006/sqlalchemy-how-to-copy-deep-copy-a-entry-and-all-its-foreign-relation
 - Reference: https://docs.sqlalchemy.org/en/20/orm/basic_relationships.html#many-to-many
 - https://stackoverflow.com/questions/30406808/flask-sqlalchemy-difference-between-association-model-and-association-table-fo
 - https://copyprogramming.com/howto/sqlalchemy-relationship-on-many-to-many-association-table
@@ -103,6 +105,15 @@ class Analysis(db.Model):
     def __repr__(self):
         return f'<{self.__tablename__.capitalize()} {self.id} {self.name}>'
 
+    def copy(self):
+        new = Analysis()
+        new.name = self.name
+        new.quote = self.quote
+        new.client = self.client
+        for layer in self.layers:
+            new.layers.append(layer.copy())
+        return new
+
 
 class Layer(db.Model):
     __tablename__ = 'layer'
@@ -136,6 +147,16 @@ class Layer(db.Model):
 
     def __repr__(self):
         return f'<{self.__tablename__.capitalize()} {self.id} {self.name}>'
+
+    def copy(self):
+        new = Layer()
+        new.name = self.name
+        new.premium = self.premium
+        new.deductible = self.deductible
+        new.limit = self.limit
+        new.display_order = self.display_order
+        new.analysis_id = self.analysis_id
+        return new
 
 
 class HistoLossFile(db.Model):
