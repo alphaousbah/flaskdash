@@ -159,6 +159,7 @@ class HistoLossFile(db.Model):
             raise ValueError('The vintage must be entered')
         if not str(value).isdigit():
             raise ValueError('The vintage must be an integer')
+        return value
 
     # Define the 1-to-many relationship between Analysis and HistoLossFile
     analysis_id = Column(Integer, ForeignKey(Analysis.id))

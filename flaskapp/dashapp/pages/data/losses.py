@@ -162,7 +162,7 @@ def save_lossfile(n_clicks, data, value, vintage, name):
         )
         rowData = df_from_sqla(analysis.histolossfiles).to_dict('records')  # Update the loss files grid
 
-        return alert, rowData, False, None, None, None
+        return None, rowData, False, None, None, None
 
     except ValueError as e:
         # Delete the loss file that was created just before
@@ -172,6 +172,7 @@ def save_lossfile(n_clicks, data, value, vintage, name):
             str(e),
             color='danger',
             className='text-center',
+            duration=2000
         )
         return alert, no_update, no_update, no_update, no_update, no_update
 
