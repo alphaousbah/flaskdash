@@ -23,11 +23,7 @@ def layout(analysis_id):
                             dbc.Row([
                                 dbc.Col([
                                     dbc.Label('AGIR Quote', html_for=page_id + 'input-quote', width=2),
-                                    dbc.Input(
-                                        id=page_id + 'input-quote',
-                                        placeholder='Enter a value',
-                                        type='number',
-                                    ),
+                                    dbc.Input(id=page_id + 'input-quote', value=analysis.quote),
                                 ]),
                             ], className='mb-2'),
                             dbc.Row([

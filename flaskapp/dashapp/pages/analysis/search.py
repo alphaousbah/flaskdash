@@ -69,18 +69,19 @@ def copy_analyses(n_clicks, selectedRows):
         analysis_id = row['id']
         analysis = db.session.get(Analysis, analysis_id)
         new = analysis.copy()
+        new.name = new.name + ' - Copy'
         db.session.add(new)
-        db.session.commit()  # Commit in the loop to get the analysis_copy.id
+        db.session.commit()  # Commit immediately to get the analysis_copy.id
         newRows.append(
             {
-                'id': '[' + str(new.id) + '](/dashapp/analysis/view/' + str(new.id) + ')',
+                'id': new.id,
+                'quote': '[' + str(new.quote) + '](/dashapp/analysis/view/' + str(new.id) + ')',
                 'name': '[' + new.name + '](/dashapp/analysis/view/' + str(new.id) + ')',
-                'quote': new.quote,
                 'client': new.client
             }
         )
     # Update the analyses grid
-    return {'add': newRows}
+    return {'add': newRows, 'addIndex': 0}
 
 
 @callback(
