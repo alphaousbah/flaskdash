@@ -16,21 +16,21 @@ def layout(analysis_id):
             dbc.ModalBody([
                 dbc.Row([
                     dbc.Col([
-                        dbc.Label('Vintage', html_for=page_id + 'input-vintage', width=2),
-                        dbc.Input(id=page_id + 'input-vintage', placeholder='Enter a value'),
-                    ]),
-                ], className='mb-2'),
-                dbc.Row([
-                    dbc.Col([
                         dbc.Label('Name', html_for=page_id + 'input-name', width=2),
                         dbc.Input(id=page_id + 'input-name', placeholder='Enter a value'),
                     ]),
                 ], className='mb-2'),
                 dbc.Row([
                     dbc.Col([
+                        dbc.Label('Vintage', html_for=page_id + 'input-vintage', width=2),
+                        dbc.Input(id=page_id + 'input-vintage', placeholder='Enter a value'),
+                    ]),
+                ], className='mb-2'),
+                dbc.Row([
+                    dbc.Col([
                         dbc.Textarea(
                             id=page_id + 'text-area',
-                            placeholder='year premium loss loss_ratio' + '\n' + '2023 1000	500 0.5',
+                            placeholder='year premium loss loss_ratio' + '\n' + '2023 1000	500 0,5',
                             style={'width': '100%', 'height': 300},
                             className='mb-2',
                         ),
@@ -108,17 +108,17 @@ def toggle_modal(n_clicks):
     Output(page_id + 'div-lossfile-modif', 'children'),
     Output(page_id + 'grid-lossfiles', 'rowData', allow_duplicate=True),
     Output(page_id + 'modal-add-lossfile', 'is_open'),
-    Output(page_id + 'text-area', 'value', allow_duplicate=True),
-    Output(page_id + 'input-vintage', 'value', allow_duplicate=True),
     Output(page_id + 'input-name', 'value', allow_duplicate=True),
+    Output(page_id + 'input-vintage', 'value', allow_duplicate=True),
+    Output(page_id + 'text-area', 'value', allow_duplicate=True),
     Input(page_id + 'btn-save', 'n_clicks'),
     State(page_id + 'store', 'data'),
-    State(page_id + 'text-area', 'value'),
-    State(page_id + 'input-vintage', 'value'),
     State(page_id + 'input-name', 'value'),
+    State(page_id + 'input-vintage', 'value'),
+    State(page_id + 'text-area', 'value'),
     config_prevent_initial_callbacks=True
 )
-def save_lossfile(n_clicks, data, value, vintage, name):
+def save_lossfile(n_clicks, data, name, vintage, value):
     analysis_id = data['analysis_id']
     analysis = db.session.get(Analysis, analysis_id)
 
@@ -148,11 +148,12 @@ def save_lossfile(n_clicks, data, value, vintage, name):
         # https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
         for index, row in df_losses.iterrows():
             loss = HistoLoss(
-                lossfile_id=lossfile.id,
+                name=f'Loss for {lossfile.name}',
                 year=row['year'],
                 premium=row['premium'],
                 loss=row['loss'],
-                loss_ratio=row['loss_ratio']
+                loss_ratio=row['loss_ratio'],
+                lossfile_id=lossfile.id,
             )
             db.session.add(loss)
         db.session.commit()  # Commit after the loop for DB performance and input data checking
@@ -178,8 +179,8 @@ def save_lossfile(n_clicks, data, value, vintage, name):
 
 
 @callback(
-    Output(page_id + 'input-vintage', 'value'),
     Output(page_id + 'input-name', 'value'),
+    Output(page_id + 'input-vintage', 'value'),
     Output(page_id + 'text-area', 'value'),
     Input(page_id + 'btn-clear', 'n_clicks'),
 )

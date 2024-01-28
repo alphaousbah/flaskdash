@@ -270,9 +270,10 @@ def save_loss_model(n_clicks, data, value):
     # Save the model file year losses
     for index, row in df.iterrows():
         yearloss = ModelYearLoss(
+            name=f'Loss for {modelfile.name}',
             year=row['year'],
             amount=row['amount'],
-            modelfile_id=modelfile.id
+            modelfile_id=modelfile.id,
         )
         db.session.add(yearloss)
     db.session.commit()  # Commit after the loop for DB performance

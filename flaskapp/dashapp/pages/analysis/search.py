@@ -69,9 +69,8 @@ def copy_analyses(n_clicks, selectedRows):
         analysis_id = row['id']
         analysis = db.session.get(Analysis, analysis_id)
         new = analysis.copy()
-        new.name = new.name + ' - Copy'
         db.session.add(new)
-        db.session.commit()  # Commit immediately to get the analysis_copy.id
+        db.session.commit()
         newRows.append(
             {
                 'id': new.id,
