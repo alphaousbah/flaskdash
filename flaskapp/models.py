@@ -141,7 +141,7 @@ class Layer(CommonMixin, db.Model):
         return value
 
     # Define the 1-to-many relationship between Analysis and Layer
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='layers')
 
     # Get the modelfiles associated to the layer through the association layer_modelfile_table
@@ -174,7 +174,7 @@ class HistoLossFile(CommonMixin, db.Model):
         return value
 
     # Define the 1-to-many relationship between Analysis and HistoLossFile
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='histolossfiles')
 
     # Define the 1-to-many relationship between HistoLossFile and HistoLoss
@@ -217,7 +217,7 @@ class PremiumFile(CommonMixin, db.Model):  # This model is not necessary for SL 
         return value
 
     # Define the 1-to-many relationship between Analysis and PremiumFile
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='premiumfiles')
 
     # Define the 1-to-many relationship between PremiumFile and Premium
@@ -258,7 +258,7 @@ class RiskProfileFile(CommonMixin, db.Model):  # This model is not necessary for
         return value
 
     # Define the 1-to-many relationship between Analysis and RiskProfile
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='riskprofilefiles')
 
     # Define the 1-to-many relationship between RiskProfileFile and RiskProfile
@@ -299,7 +299,7 @@ class ModelFile(CommonMixin, db.Model):
         return value
 
     # Define the 1-to-many relationship between Analysis and ModelFile
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='modelfiles')
 
     # Define the 1-to-many relationship between ModelFile and ModelYearLoss
@@ -348,7 +348,7 @@ class ResultFile(CommonMixin, db.Model):
         return value
 
     # Define the 1-to-many relationship between Analysis and ResultFile
-    analysis_id: Mapped[int] = mapped_column1(ForeignKey('analysis.id'))
+    analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
     analysis: Mapped['Analysis'] = relationship(back_populates='resultfiles')
 
     # Define the 1-to-many relationship between ResultFile and ResultLayer, ResultModelFile
