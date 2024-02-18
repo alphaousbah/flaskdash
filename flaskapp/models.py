@@ -11,7 +11,6 @@ This module defines a set of SQLAlchemy database models representing a modeling 
 The models include:
 - Analysis: Represents a reinsurance analysis.
 - Layer: Represents a layer within an analysis.
-- HistoLossFile: Represents historical loss data files associated with an analysis.
 - HistoLoss: Represents individual historical loss records.
 - PremiumFile: Represents premium data files (not used for SL pricing).
 - Premium: Represents individual premium records (not used for SL pricing).
@@ -36,6 +35,7 @@ Resources:
 """
 
 from flaskapp.extensions import db
+from typing import Optional
 from typing import Final
 from typing import List
 from sqlalchemy import Column
@@ -70,9 +70,9 @@ class CommonMixin:
 
 class Analysis(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    quote: Mapped[int] = mapped_column(nullable=False)
-    client: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
+    quote: Mapped[int] = mapped_column()
+    client: Mapped[str] = mapped_column(String(50))
 
     # https://docs.sqlalchemy.org/en/20/orm/mapped_attributes.html#simple-validators
     @validates('name')
@@ -120,10 +120,10 @@ class Analysis(CommonMixin, db.Model):
 
 class Layer(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    premium: Mapped[int] = mapped_column(nullable=False)
-    agg_limit: Mapped[int] = mapped_column(nullable=False)
-    agg_deduct: Mapped[int] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
+    premium: Mapped[int] = mapped_column()
+    agg_limit: Mapped[int] = mapped_column()
+    agg_deduct: Mapped[int] = mapped_column()
     display_order: Mapped[int] = mapped_column()
 
     @validates('name')
@@ -156,8 +156,8 @@ class Layer(CommonMixin, db.Model):
 
 class HistoLossFile(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    vintage: Mapped[int] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
+    vintage: Mapped[int] = mapped_column()
 
     @validates('name')
     def validate_name(self, key, value):
@@ -190,9 +190,9 @@ class HistoLossFile(CommonMixin, db.Model):
 
 class HistoLoss(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    year: Mapped[int] = mapped_column(nullable=False)
-    premium: Mapped[int] = mapped_column()
-    loss: Mapped[int] = mapped_column()
+    year: Mapped[int] = mapped_column()
+    premium: Mapped[Optional[int]] = mapped_column()
+    loss: Mapped[Optional[int]] = mapped_column()
     loss_ratio: Mapped[float] = mapped_column()
 
     # Define the 1-to-many relationship between HistoLossFile and HistoLoss
@@ -208,7 +208,7 @@ class HistoLoss(CommonMixin, db.Model):
 
 class PremiumFile(CommonMixin, db.Model):  # This model is not necessary for SL pricing
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
 
     @validates('name')
     def validate_name(self, key, value):
@@ -233,8 +233,8 @@ class PremiumFile(CommonMixin, db.Model):  # This model is not necessary for SL 
 
 class Premium(CommonMixin, db.Model):  # This model is not necessary for SL pricing
     id: Mapped[int] = mapped_column(primary_key=True)
-    year: Mapped[int] = mapped_column(nullable=False)
-    amount: Mapped[int] = mapped_column(nullable=False)
+    year: Mapped[int] = mapped_column()
+    amount: Mapped[int] = mapped_column()
 
     # Define the 1-to-many relationship between PremiumFile and Premium
     premiumfile_id: Mapped[int] = mapped_column(ForeignKey('premiumfile.id'))
@@ -249,7 +249,7 @@ class Premium(CommonMixin, db.Model):  # This model is not necessary for SL pric
 
 class RiskProfileFile(CommonMixin, db.Model):  # This model is not necessary for SL pricing
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
 
     @validates('name')
     def validate_name(self, key, value):
@@ -289,8 +289,8 @@ class RiskProfile(CommonMixin, db.Model):  # This model is not necessary for SL 
 
 class ModelFile(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False)  # Cat/Non cat
+    name: Mapped[str] = mapped_column(String(50))
+    type: Mapped[str] = mapped_column(String(50))  # Cat/Non cat
 
     @validates('name')
     def validate_name(self, key, value):
@@ -315,7 +315,7 @@ class ModelFile(CommonMixin, db.Model):
 
 class ModelYearLoss(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    year: Mapped[int] = mapped_column(nullable=False)
+    year: Mapped[int] = mapped_column()
     loss_ratio: Mapped[float] = mapped_column()
 
     # Define the 1-to-many relationship between ModelFile and ModelYearLoss
@@ -339,7 +339,7 @@ layer_modelfile_table: Final[Table] = Table(
 
 class ResultFile(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
 
     @validates('name')
     def validate_name(self, key, value):
@@ -359,10 +359,10 @@ class ResultFile(CommonMixin, db.Model):
 
 class ResultLayer(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    premium: Mapped[int] = mapped_column(nullable=False)
-    agg_limit: Mapped[int] = mapped_column(nullable=False)
-    agg_deduct: Mapped[int] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(String(50))
+    premium: Mapped[int] = mapped_column()
+    agg_limit: Mapped[int] = mapped_column()
+    agg_deduct: Mapped[int] = mapped_column()
 
     @validates('name')
     def validate_name(self, key, value):
@@ -389,48 +389,48 @@ class ResultLayer(CommonMixin, db.Model):
     yearlosses: Mapped[List['ResultLayerYearLoss']] = relationship(back_populates='layer', cascade='all, delete-orphan')
 
 
-class ResultLayerXS(CommonMixin, db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    premium: Mapped[int] = mapped_column(nullable=False)
-    occ_limit: Mapped[int] = mapped_column(nullable=False)
-    occ_deduct: Mapped[int] = mapped_column()
-    agg_limit: Mapped[int] = mapped_column(nullable=False)
-    agg_deduct: Mapped[int] = mapped_column(nullable=False)
-
-    @validates('name')
-    def validate_name(self, key, value):
-        if value is None or not value:
-            raise ValueError('The layer name must be entered')
-        return value
-
-    @validates('premium', 'agg_limit', 'agg_deduct')
-    def validate_int_col(self, key, value):
-        if value is None:
-            raise ValueError('The premiums, deductibles and limits must be entered for all layers')
-        if not str(value).isdigit():
-            raise ValueError('The premiums, deductibles and limits must all be integers')
-        return value
-
-    # Define the 1-to-many relationship between ResultFile and ResultLayer
-    resultfile_id: Mapped[int] = mapped_column(ForeignKey('resultfile.id'))
-    resultfile: Mapped['ResultFile'] = relationship(back_populates='layers')
-
-    # Get the modelfiles associated to the resultlayer through the association result_layer_modelfile_table
-    modelfiles: Mapped[List['ResultModelFile']] = relationship(secondary=lambda: result_layer_modelfile_table)
-
-    # Define the 1-to-many relationship between ResultLayer and ResultYearLoss
-    # TODO: Create ResultLayerYearLossXS
-    yearlosses: Mapped[List['ResultLayerYearLossXS']] = relationship(back_populates='layer',
-                                                                     cascade='all, delete-orphan')
+# class ResultLayerXS(CommonMixin, db.Model):
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     name: Mapped[str] = mapped_column(String(50))
+#     premium: Mapped[int] = mapped_column()
+#     occ_limit: Mapped[int] = mapped_column()
+#     occ_deduct: Mapped[Optional[int]] = mapped_column()
+#     agg_limit: Mapped[int] = mapped_column()
+#     agg_deduct: Mapped[int] = mapped_column()
+#
+#     @validates('name')
+#     def validate_name(self, key, value):
+#         if value is None or not value:
+#             raise ValueError('The layer name must be entered')
+#         return value
+#
+#     @validates('premium', 'agg_limit', 'agg_deduct')
+#     def validate_int_col(self, key, value):
+#         if value is None:
+#             raise ValueError('The premiums, deductibles and limits must be entered for all layers')
+#         if not str(value).isdigit():
+#             raise ValueError('The premiums, deductibles and limits must all be integers')
+#         return value
+#
+#     # Define the 1-to-many relationship between ResultFile and ResultLayer
+#     resultfile_id: Mapped[int] = mapped_column(ForeignKey('resultfile.id'))
+#     resultfile: Mapped['ResultFile'] = relationship(back_populates='layers')
+#
+#     # Get the modelfiles associated to the resultlayer through the association result_layer_modelfile_table
+#     modelfiles: Mapped[List['ResultModelFile']] = relationship(secondary=lambda: result_layer_modelfile_table)
+#
+#     # Define the 1-to-many relationship between ResultLayer and ResultYearLoss
+#     # TODO: Create ResultLayerYearLossXS
+#     yearlosses: Mapped[List['ResultLayerYearLossXS']] = relationship(back_populates='layer',
+#                                                                      cascade='all, delete-orphan')
 
 
 class ResultLayerYearLoss(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    model_id: Mapped[int] = mapped_column(nullable=False)
-    model_name: Mapped[str] = mapped_column(String(50), nullable=False)
-    year: Mapped[int] = mapped_column(nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False)  # Cat/Non cat
+    model_id: Mapped[int] = mapped_column()
+    model_name: Mapped[str] = mapped_column(String(50))
+    year: Mapped[int] = mapped_column()
+    type: Mapped[str] = mapped_column(String(50))  # Cat/Non cat
     loss_ratio: Mapped[float] = mapped_column()
     gross: Mapped[int] = mapped_column()
     ceded: Mapped[int] = mapped_column()
@@ -443,9 +443,9 @@ class ResultLayerYearLoss(CommonMixin, db.Model):
 
 class ResultModelFile(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    id_src: Mapped[int] = mapped_column()
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False)  # Cat/Non cat
+    id_src: Mapped[Optional[int]] = mapped_column()
+    name: Mapped[str] = mapped_column(String(50))
+    type: Mapped[str] = mapped_column(String(50))  # Cat/Non cat
 
     @validates('name')
     def validate_name(self, key, value):
@@ -464,7 +464,7 @@ class ResultModelFile(CommonMixin, db.Model):
 
 class ResultModelYearLoss(CommonMixin, db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    year: Mapped[int] = mapped_column(nullable=False)
+    year: Mapped[int] = mapped_column()
     loss_ratio: Mapped[float] = mapped_column()
 
     # Define the 1-to-many relationship between ResultModelFile and ResultModelYearLoss
