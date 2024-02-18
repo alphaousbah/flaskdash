@@ -1,3 +1,5 @@
+import dash_bootstrap_components
+
 from flaskapp.dashapp.pages.utils import *
 
 directory = get_directory(__name__)['directory']
@@ -7,7 +9,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     return html.Div([
         dcc.Store(id=page_id + 'store', data={'analysis_id': analysis_id}),
@@ -64,22 +66,22 @@ def layout(analysis_id):
 )
 def update_analysis(n_clicks, data, quote, name, client):
     analysis_id = data['analysis_id']
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     try:
         analysis.quote = quote
         analysis.name = name
         analysis.client = client
-        db.session.commit()
-
+    except (TypeError, ValueError) as e:
+        session.rollback()
+        return dbc.Alert(
+            str(e),
+            color='danger',
+        )
+    else:
+        session.commit()
         return dbc.Alert(
             'The analysis has been updated',
             color='success',
             duration=4000,
-        )
-
-    except (TypeError, ValueError) as e:
-        return dbc.Alert(
-            str(e),
-            color='danger',
         )

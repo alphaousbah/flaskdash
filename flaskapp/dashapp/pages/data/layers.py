@@ -7,7 +7,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     if analysis.layers:
         df = df_from_sqla(analysis.layers)
@@ -69,11 +69,11 @@ def layout(analysis_id):
                                 'valueFormatter': {'function': 'd3.format(",d")(params.value)'}
                             },
                             {
-                                'field': 'deductible',
+                                'field': 'agg_limit',
                                 'valueFormatter': {'function': '(params.value) + "%"'}
                             },
                             {
-                                'field': 'limit',
+                                'field': 'agg_deduct',
                                 'valueFormatter': {'function': '(params.value) + "%"'}
                             },
                         ],
@@ -108,7 +108,7 @@ for i in [1, 2, 3, 4, 5]:
     )
     def create_layers(n_clicks, data, n_layers):  # n_layers = children property of btn-create
         analysis_id = data['analysis_id']
-        analysis = db.session.get(Analysis, analysis_id)
+        analysis = session.get(Analysis, analysis_id)
         n_layers = int(n_layers[0])
 
         # Initialize the grid transaction
@@ -118,32 +118,32 @@ for i in [1, 2, 3, 4, 5]:
             # Set the layers default parameters values
             name = 'Enter a name'
             premium = 0
-            deductible = 0
-            limit = 0
+            agg_limit = 0
+            agg_deduct = 0
             display_order = 999  # Set display_order to 999 so that the new layers are displayed in the last position
 
             layer = Layer(
                 name=name,
                 premium=premium,
-                deductible=deductible,
-                limit=limit,
+                agg_limit=agg_limit,
+                agg_deduct=agg_deduct,
                 display_order=display_order,
-                analysis_id=analysis_id
             )
-            db.session.add(layer)
-            db.session.commit()
+            analysis.layers.append(layer)
+            session.flush()
 
             newRows.append(
                 {
                     'id': layer.id,
                     'name': layer.name,
                     'premium': layer.premium,
-                    'deductible': layer.deductible,
-                    'limit': layer.limit,
+                    'agg_limit': layer.agg_limit,
+                    'agg_deduct': layer.agg_deduct,
                     'display_order': layer.display_order,
                     'analysis_id': analysis_id
                 }
             )
+        session.commit()
 
         alert = dbc.Alert(
             'The layers have been modified. Save the changes with the Save button',
@@ -169,14 +169,14 @@ def delete_layers(n_clicks, selectedRows, data):
 
     # Identify and get the analysis
     analysis_id = data['analysis_id']
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     # Delete the selected layers
     for row in selectedRows:
         layer_id = row['id']
-        layer = db.session.get(Layer, layer_id)
-        db.session.delete(layer)
-    db.session.commit()  # Commit after the loop for DB performance
+        layer = session.get(Layer, layer_id)
+        session.delete(layer)
+    session.commit()  # Commit after the loop for DB performance
 
     alert = dbc.Alert(
         'The layers have been deleted',
@@ -204,6 +204,7 @@ def inform_layers_modified(cellValueChanged):
     return alert
 
 
+# TODO: Correct with session.rollback and only one commit!!!
 @callback(
     Output(page_id + 'div-layers-modif', 'children'),
     Input(page_id + 'btn-save', 'n_clicks'),
@@ -213,13 +214,13 @@ def inform_layers_modified(cellValueChanged):
 def save_layers(n_clicks, virtualRowData):
     try:
         for row in virtualRowData:
-            layer = db.session.get(Layer, row['id'])
+            layer = session.get(Layer, row['id'])
             layer.name = row['name']
             layer.premium = row['premium']
-            layer.deductible = row['deductible']
-            layer.limit = row['limit']
+            layer.agg_limit = row['agg_limit']
+            layer.agg_deduct = row['agg_deduct']
             layer.display_order = virtualRowData.index(row)
-        db.session.commit()  # Commit after the loop for DB performance and input data checking
+        session.commit()  # Commit after the loop for DB performance and input data checking
 
         alert = dbc.Alert(
             'The changes have been saved',

@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 47847ea2c2b2
+Revision ID: c73e6a24f1db
 Revises: 
-Create Date: 2024-01-27 19:09:59.355075
+Create Date: 2024-02-16 21:01:44.320633
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '47847ea2c2b2'
+revision = 'c73e6a24f1db'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,8 +37,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('premium', sa.Integer(), nullable=False),
-    sa.Column('deductible', sa.Integer(), nullable=False),
-    sa.Column('limit', sa.Integer(), nullable=False),
+    sa.Column('agg_limit', sa.Integer(), nullable=False),
+    sa.Column('agg_deduct', sa.Integer(), nullable=False),
     sa.Column('display_order', sa.Integer(), nullable=True),
     sa.Column('analysis_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['analysis_id'], ['analysis.id'], ),
@@ -58,7 +58,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['analysis_id'], ['analysis.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('pricingrelationship',
+    op.create_table('resultfile',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('analysis_id', sa.Integer(), nullable=True),
@@ -74,7 +74,6 @@ def upgrade():
     )
     op.create_table('histoloss',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('year', sa.Integer(), nullable=False),
     sa.Column('premium', sa.Integer(), nullable=True),
     sa.Column('loss', sa.Integer(), nullable=True),
@@ -83,62 +82,78 @@ def upgrade():
     sa.ForeignKeyConstraint(['lossfile_id'], ['histolossfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('layertomodelfile',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('pricingrelationship_id', sa.Integer(), nullable=True),
-    sa.Column('layer_id', sa.Integer(), nullable=True),
-    sa.Column('modelfile_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['layer_id'], ['layer.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['modelfile_id'], ['modelfile.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['pricingrelationship_id'], ['pricingrelationship.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    op.create_table('layermodelfile',
+    sa.Column('layer_id', sa.Integer(), nullable=False),
+    sa.Column('modelfile_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['layer_id'], ['layer.id'], ),
+    sa.ForeignKeyConstraint(['modelfile_id'], ['modelfile.id'], ),
+    sa.PrimaryKeyConstraint('layer_id', 'modelfile_id')
     )
     op.create_table('modelyearloss',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('year', sa.Integer(), nullable=False),
-    sa.Column('amount', sa.Float(), nullable=False),
+    sa.Column('loss_ratio', sa.Float(), nullable=True),
     sa.Column('modelfile_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['modelfile_id'], ['modelfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('premium',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('year', sa.Integer(), nullable=False),
     sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('premiumfile_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['premiumfile_id'], ['premiumfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('resultfile',
+    op.create_table('resultlayer',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('analysis_id', sa.Integer(), nullable=True),
-    sa.Column('pricingrelationship_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['analysis_id'], ['analysis.id'], ),
-    sa.ForeignKeyConstraint(['pricingrelationship_id'], ['pricingrelationship.id'], ),
+    sa.Column('premium', sa.Integer(), nullable=False),
+    sa.Column('agg_limit', sa.Integer(), nullable=False),
+    sa.Column('agg_deduct', sa.Integer(), nullable=False),
+    sa.Column('resultfile_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['resultfile_id'], ['resultfile.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('resultmodelfile',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id_src', sa.Integer(), nullable=True),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('resultfile_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['resultfile_id'], ['resultfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('riskprofile',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('riskprofilefile_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['riskprofilefile_id'], ['riskprofilefile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('resultyearloss',
+    op.create_table('resultlayermodelfile',
+    sa.Column('resultlayer_id', sa.Integer(), nullable=False),
+    sa.Column('resultmodelfile_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['resultlayer_id'], ['resultlayer.id'], ),
+    sa.ForeignKeyConstraint(['resultmodelfile_id'], ['resultmodelfile.id'], ),
+    sa.PrimaryKeyConstraint('resultlayer_id', 'resultmodelfile_id')
+    )
+    op.create_table('resultlayeryearloss',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('model', sa.String(length=50), nullable=True),
     sa.Column('year', sa.Integer(), nullable=False),
-    sa.Column('grossloss', sa.Integer(), nullable=True),
-    sa.Column('recovery', sa.Integer(), nullable=True),
-    sa.Column('netloss', sa.Integer(), nullable=True),
-    sa.Column('resultfile_id', sa.Integer(), nullable=True),
-    sa.Column('layertomodelfile_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['layertomodelfile_id'], ['layertomodelfile.id'], ),
-    sa.ForeignKeyConstraint(['resultfile_id'], ['resultfile.id'], ),
+    sa.Column('loss_ratio', sa.Float(), nullable=True),
+    sa.Column('gross', sa.Integer(), nullable=True),
+    sa.Column('ceded', sa.Integer(), nullable=True),
+    sa.Column('net', sa.Integer(), nullable=True),
+    sa.Column('resultlayer_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['resultlayer_id'], ['resultlayer.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('resultmodelyearloss',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('year', sa.Integer(), nullable=False),
+    sa.Column('loss_ratio', sa.Float(), nullable=True),
+    sa.Column('resultmodelfile_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['resultmodelfile_id'], ['resultmodelfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -146,15 +161,18 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('resultyearloss')
+    op.drop_table('resultmodelyearloss')
+    op.drop_table('resultlayeryearloss')
+    op.drop_table('resultlayermodelfile')
     op.drop_table('riskprofile')
-    op.drop_table('resultfile')
+    op.drop_table('resultmodelfile')
+    op.drop_table('resultlayer')
     op.drop_table('premium')
     op.drop_table('modelyearloss')
-    op.drop_table('layertomodelfile')
+    op.drop_table('layermodelfile')
     op.drop_table('histoloss')
     op.drop_table('riskprofilefile')
-    op.drop_table('pricingrelationship')
+    op.drop_table('resultfile')
     op.drop_table('premiumfile')
     op.drop_table('modelfile')
     op.drop_table('layer')

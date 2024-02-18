@@ -65,8 +65,8 @@ def layout():
 def create_analysis(n_clicks, quote, name, client):
     """
     Error handling:
-
-    Reference: https://jellis18.github.io/post/2021-12-13-python-exceptions-rust-go/
+    For SQLAlchemy: https://docs.sqlalchemy.org/en/14/orm/session_basics.html#framing-out-a-begin-commit-rollback-block
+    In general: https://jellis18.github.io/post/2021-12-13-python-exceptions-rust-go/
 
     def divide(x, y):
         if y == 0:
@@ -81,8 +81,17 @@ def create_analysis(n_clicks, quote, name, client):
     """
     try:
         analysis = Analysis(quote=quote, name=name, client=client)
-        db.session.add(analysis)
-        db.session.commit()
+        session.add(analysis)
+    except ValueError as e:
+        session.rollback()
+        alert = dbc.Alert(
+            str(e),
+            color='danger',
+            duration=4000,
+        )
+        return no_update, alert
+    else:
+        session.commit()
         data = {'analysis_id': analysis.id}
         alert = dbc.Alert(
             'The analysis has been created. You will be redirected to the analysis workspace in an instant.',
@@ -90,15 +99,6 @@ def create_analysis(n_clicks, quote, name, client):
             color='success',
         )
         return data, alert
-
-    except ValueError as e:
-        alert = dbc.Alert(
-            str(e),
-            color='danger',
-            duration=4000,
-        )
-        return no_update, alert
-
 
 @callback(
     Output(page_id + 'location', 'pathname'),

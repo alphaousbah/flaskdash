@@ -7,7 +7,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     if analysis.histolossfiles:
         grid_lossfiles = dag.AgGrid(
@@ -60,7 +60,7 @@ def layout(analysis_id):
 def display_losses(cellClicked):
     # Display the loss file losses
     lossfile_id = cellClicked['rowId']
-    lossfile = db.session.get(HistoLossFile, lossfile_id)
+    lossfile = session.get(HistoLossFile, lossfile_id)
 
     grid_losses = dag.AgGrid(
         id=page_id + 'grid-losses',
@@ -246,44 +246,40 @@ def display_model(value_year_min, value_year_max, data, rowData):
 )
 def save_loss_model(n_clicks, data, value):
     analysis_id = data['analysis_id']
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     # Save the model file
     modelfile = ModelFile(
-        analysis_id=analysis.id,
         name=value,
     )
-    db.session.add(modelfile)
-    db.session.commit()
+    analysis.modelfiles.append(modelfile)
 
     # Create the model file year losses
     s = data['s']
     scale = data['scale']
     fit_lognorm = lognorm(s=s, scale=scale)
 
-    NBYEARS = 10000  # TODO: Create a global constant giving the number of years
+    NBYEARS = 3  # TODO: Create a global constant giving the number of years
     years = range(1, NBYEARS + 1)
     loss_ratios = fit_lognorm.rvs(size=NBYEARS).tolist()
 
-    df = pd.DataFrame({'year': years, 'amount': loss_ratios})
+    df = pd.DataFrame({'year': years, 'loss_ratio': loss_ratios})
 
     # Save the model file year losses
     for index, row in df.iterrows():
-        yearloss = ModelYearLoss(
-            name=f'Loss for {modelfile.name}',
+        modelyearloss = ModelYearLoss(
             year=row['year'],
-            amount=row['amount'],
-            modelfile_id=modelfile.id,
+            loss_ratio=row['loss_ratio'],
         )
-        db.session.add(yearloss)
-    db.session.commit()  # Commit after the loop for DB performance
+        modelfile.yearlosses.append(modelyearloss)
+    session.commit()  # Commit after the loop for DB performance
 
     grid_yearlosses = dag.AgGrid(
         id=page_id + 'grid-yearlosses',
         rowData=df.to_dict('records'),
         columnDefs=[
             {'field': 'year'},
-            {'field': 'amount', 'valueFormatter': {'function': 'd3.format(".1%")(params.value)'}},
+            {'field': 'loss_ratio', 'valueFormatter': {'function': 'd3.format(".1%")(params.value)'}},
         ],
         columnSize='responsiveSizeToFit',
     )

@@ -7,13 +7,14 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id, resultfile_id=None):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     if resultfile_id:
-        resultfile = db.session.get(ResultFile, resultfile_id)
+        resultfile = session.get(ResultFile, resultfile_id)
     else:
         # Get the last result file in none was provided via the url's query string
-        resultfile = db.session.query(ResultFile).filter_by(analysis_id=analysis.id).order_by(
+        # TODO: Correct query below
+        resultfile = session.query(ResultFile).filter_by(analysis_id=analysis.id).order_by(
             ResultFile.id.desc()).first()
 
     if resultfile:
@@ -23,12 +24,12 @@ def layout(analysis_id, resultfile_id=None):
         # Get the layers and model files for the pricing relationship of the result file
         # Use the set() function to get the model files and layers without repetition
         # Sort the objects by name with the sorted() function
-        layertomodelfiles = resultfile.pricingrelationship.layertomodelfiles
+        layermodelfiles = resultfile.pricingrelationship.layermodelfiles
 
-        modelfiles = set([layertomodelfile.modelfile for layertomodelfile in layertomodelfiles])
+        modelfiles = set([layermodelfile.modelfile for layermodelfile in layermodelfiles])
         modelfiles = sorted(modelfiles, key=lambda modelfile: modelfile.name)
 
-        layers = set([layertomodelfile.layer for layertomodelfile in layertomodelfiles])
+        layers = set([layermodelfile.layer for layermodelfile in layermodelfiles])
         layers = sorted(layers, key=lambda layer: layer.name)
 
         # Get the year loss table for the result file

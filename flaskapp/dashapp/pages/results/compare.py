@@ -15,7 +15,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     return html.Div([
         dcc.Store(id=page_id + 'store', data={'analysis_id': analysis_id}),

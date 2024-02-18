@@ -7,7 +7,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
     df = df_from_sqla(analysis.modelfiles)
 
     return html.Div([

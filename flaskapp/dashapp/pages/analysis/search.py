@@ -67,10 +67,10 @@ def copy_analyses(n_clicks, selectedRows):
     newRows = []
     for row in selectedRows:
         analysis_id = row['id']
-        analysis = db.session.get(Analysis, analysis_id)
+        analysis = session.get(Analysis, analysis_id)
         new = analysis.copy()
-        db.session.add(new)
-        db.session.commit()
+        session.add(new)
+        session.commit()
         newRows.append(
             {
                 'id': new.id,
@@ -93,12 +93,17 @@ def delete_analyses(n_clicks, selectedRows):
         return no_update
 
     # Delete the selected analyses
-    for row in selectedRows:
-        analysis_id = row['id']
-        analysis = db.session.get(Analysis, analysis_id)
-        db.session.delete(analysis)
-    db.session.commit()  # Commit after the loop for DB performance
-
-    # TODO: Add a modal to ask the user to confirm the deletion
-    # Update the analyses grid
-    return {'remove': selectedRows}
+    # SQLAlchemy error handling: https://docs.sqlalchemy.org/en/14/orm/session_basics.html#framing-out-a-begin-commit-rollback-block
+    try:
+        for row in selectedRows:
+            analysis_id = row['id']
+            analysis = session.get(Analysis, analysis_id)
+            session.delete(analysis)
+    except e:
+        session.rollback()
+        print(e)
+        return no_update
+    else:
+        session.commit()
+        return {'remove': selectedRows}
+        # TODO: Add a modal to ask the user to confirm the deletion

@@ -38,7 +38,7 @@ from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import dash_mantine_components as dmc
 import dash_ag_grid as dag
-from flaskapp.extensions import db
+from flaskapp.extensions import session
 from flaskapp.models import *
 import numpy as np
 import pandas as pd
@@ -228,7 +228,8 @@ def get_link_results(row):
     # Check if the pricing relationships has already been processed,
     # that is if a corresponding result file exists
     # If so, create a link to the result
-    resultfile = db.session.query(ResultFile) \
+    # TODO: Correct below with the new DB models and the new querying style
+    resultfile = session.query(ResultFile) \
         .filter_by(analysis_id=row['analysis_id'], pricingrelationship_id=row['id']).first()
 
     if resultfile:
@@ -264,10 +265,6 @@ def get_lognorm_param(serie):
         'scale': scale,
         's': s
     }
-
-
-def get_sl_recovery(gross_loss, premium, limit, deductible):
-    return min(limit / 100 * premium, max(0, gross_loss - deductible / 100 * premium))
 
 
 def get_df_oep_summary(layers, modelfiles, resultyearlosses):
@@ -328,7 +325,7 @@ def get_df_oep_summary(layers, modelfiles, resultyearlosses):
     for layer in layers:
         resultyearlosses_for_layer = [
             resultyearloss for resultyearloss in resultyearlosses
-            if resultyearloss.layertomodelfile.layer == layer
+            if resultyearloss.layermodelfile.layer == layer
         ]
 
         if len(resultyearlosses_for_layer) > 0:
@@ -345,7 +342,7 @@ def get_df_oep_summary(layers, modelfiles, resultyearlosses):
         for modelfile in modelfiles:
             resultyearlosses_for_layer_and_modelfile = [
                 resultyearloss for resultyearloss in resultyearlosses_for_layer
-                if resultyearloss.layertomodelfile.modelfile == modelfile
+                if resultyearloss.layermodelfile.modelfile == modelfile
             ]
             recoveries_modelfile = df_from_sqla(resultyearlosses_for_layer_and_modelfile)
 

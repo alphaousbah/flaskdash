@@ -7,7 +7,7 @@ page_id = get_page_id(__name__)
 
 
 def layout(analysis_id):
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     # Define the modal that is used to add a loss file
     modal_add_lossfile = html.Div([
@@ -120,7 +120,7 @@ def toggle_modal(n_clicks):
 )
 def save_lossfile(n_clicks, data, name, vintage, value):
     analysis_id = data['analysis_id']
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     try:
         # Save the new loss file in the database
@@ -129,8 +129,8 @@ def save_lossfile(n_clicks, data, name, vintage, value):
             vintage=vintage,
             name=name
         )
-        db.session.add(lossfile)
-        db.session.commit()
+        session.add(lossfile)
+        session.commit()
 
     except ValueError as e:
         alert = dbc.Alert(
@@ -155,8 +155,8 @@ def save_lossfile(n_clicks, data, name, vintage, value):
                 loss_ratio=row['loss_ratio'],
                 lossfile_id=lossfile.id,
             )
-            db.session.add(loss)
-        db.session.commit()  # Commit after the loop for DB performance and input data checking
+            session.add(loss)
+        session.commit()  # Commit after the loop for DB performance and input data checking
         alert = dbc.Alert(
             'The changes have been saved',
             className='text-center',
@@ -167,8 +167,8 @@ def save_lossfile(n_clicks, data, name, vintage, value):
 
     except ValueError as e:
         # Delete the loss file that was created just before
-        db.session.delete(lossfile)
-        db.session.commit()
+        session.delete(lossfile)
+        session.commit()
         alert = dbc.Alert(
             str(e),
             color='danger',
@@ -197,7 +197,7 @@ def clear_modal(n_clicks):
 )
 def display_losses(cellClicked):
     lossfile_id = cellClicked['rowId']
-    lossfile = db.session.get(HistoLossFile, lossfile_id)
+    lossfile = session.get(HistoLossFile, lossfile_id)
 
     grid_losses = dag.AgGrid(
         id=page_id + 'grid-oep',
@@ -230,13 +230,13 @@ def delete_lossfiles(n_clicks, data, selectedRows):
 
     # TODO: Inform the user that the deletion was successful
     analysis_id = data['analysis_id']
-    analysis = db.session.get(Analysis, analysis_id)
+    analysis = session.get(Analysis, analysis_id)
 
     # Delete the selected loss files
     for lossfile in selectedRows:
-        lossfile = db.session.get(HistoLossFile, lossfile['id'])
-        db.session.delete(lossfile)
-    db.session.commit()  # Commit after the loop for DB performance
+        lossfile = session.get(HistoLossFile, lossfile['id'])
+        session.delete(lossfile)
+    session.commit()  # Commit after the loop for DB performance
 
     # Update the loss files grid
     rowData = df_from_sqla(analysis.histolossfiles).to_dict('records')
