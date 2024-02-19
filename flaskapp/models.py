@@ -56,9 +56,25 @@ class CommonMixin:
     """ Define a series of common elements that may be applied to mapped
         classes using this class as a mixin class """
 
+    # Define the table name from the class name
+    # https://docs.sqlalchemy.org/en/20/orm/declarative_mixins.html
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
+
+    # Define the validation functions
+    @staticmethod
+    def validate_not_null(key, value):
+        if not value:
+            raise ValueError(f'The {key} must be entered')
+        return value
+
+    @staticmethod
+    def validate_is_number(key, value):
+        value = CommonMixin.validate_not_null(key, value)
+        if not str(value).isdigit():
+            raise ValueError(f'The {key} must be an integer')
+        return value
 
     def __repr__(self):
         # https://stackoverflow.com/questions/610883/how-to-check-if-an-object-has-an-attribute/610923#610923
@@ -75,25 +91,13 @@ class Analysis(CommonMixin, db.Model):
     client: Mapped[str] = mapped_column(String(50))
 
     # https://docs.sqlalchemy.org/en/20/orm/mapped_attributes.html#simple-validators
-    @validates('name')
-    def validate_name(self, key, value):
-        if value is None or not value:
-            raise ValueError('The analysis name must be entered')
-        return value
+    @validates('name', 'client')
+    def validate_string(self, key, value):
+        return self.validate_not_null(key, value)
 
     @validates('quote')
-    def validate_quote(self, key, value):
-        if value is None or not value:
-            raise ValueError('The quote number must be entered')
-        if not str(value).isdigit():
-            raise ValueError('The quote number must be an integer')
-        return value
-
-    @validates('client')
-    def validate_client(self, key, value):
-        if value is None or not value:
-            raise ValueError('The client must be entered')
-        return value
+    def validate_number(self, key, value):
+        return self.validate_is_number(key, value)
 
     # Define the 1-to-many relationship between Analysis and Layer, HistoLossFile, PremiumFile, RiskProfileFile, ModelFile, PricingRelationship, ResultFile
     layers: Mapped[List['Layer']] = relationship(back_populates='analysis', cascade='all, delete-orphan')
@@ -127,18 +131,12 @@ class Layer(CommonMixin, db.Model):
     display_order: Mapped[int] = mapped_column()
 
     @validates('name')
-    def validate_name(self, key, value):
-        if value is None or not value:
-            raise ValueError('The layer name must be entered')
-        return value
+    def validate_string(self, key, value):
+        return self.validate_not_null(key, value)
 
     @validates('premium', 'agg_limit', 'agg_deduct')
-    def validate_int_col(self, key, value):
-        if value is None:
-            raise ValueError('The premiums, deductibles and limits must be entered for all layers')
-        if not str(value).isdigit():
-            raise ValueError('The premiums, deductibles and limits must all be integers')
-        return value
+    def validate_number(self, key, value):
+        return self.validate_is_number(key, value)
 
     # Define the 1-to-many relationship between Analysis and Layer
     analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
@@ -160,18 +158,12 @@ class HistoLossFile(CommonMixin, db.Model):
     vintage: Mapped[int] = mapped_column()
 
     @validates('name')
-    def validate_name(self, key, value):
-        if value is None or not value:
-            raise ValueError('The loss file name must be entered')
-        return value
+    def validate_string(self, key, value):
+        return self.validate_not_null(key, value)
 
     @validates('vintage')
-    def validate_vintage(self, key, value):
-        if value is None:
-            raise ValueError('The vintage must be entered')
-        if not str(value).isdigit():
-            raise ValueError('The vintage must be an integer')
-        return value
+    def validate_number(self, key, value):
+        return self.validate_is_number(key, value)
 
     # Define the 1-to-many relationship between Analysis and HistoLossFile
     analysis_id: Mapped[int] = mapped_column(ForeignKey('analysis.id'))
@@ -431,7 +423,6 @@ class ResultLayerYearLoss(CommonMixin, db.Model):
     model_name: Mapped[str] = mapped_column(String(50))
     year: Mapped[int] = mapped_column()
     type: Mapped[str] = mapped_column(String(50))  # Cat/Non cat
-    loss_ratio: Mapped[float] = mapped_column()
     gross: Mapped[int] = mapped_column()
     ceded: Mapped[int] = mapped_column()
     net: Mapped[int] = mapped_column()

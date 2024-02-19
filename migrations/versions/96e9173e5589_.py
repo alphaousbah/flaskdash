@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 8fb6b6911b50
+Revision ID: 96e9173e5589
 Revises: 
-Create Date: 2024-02-18 23:07:58.749761
+Create Date: 2024-02-19 21:57:12.547841
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8fb6b6911b50'
+revision = '96e9173e5589'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -76,8 +76,8 @@ def upgrade():
     op.create_table('histoloss',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('year', sa.Integer(), nullable=False),
-    sa.Column('premium', sa.Integer(), nullable=False),
-    sa.Column('loss', sa.Integer(), nullable=False),
+    sa.Column('premium', sa.Integer(), nullable=True),
+    sa.Column('loss', sa.Integer(), nullable=True),
     sa.Column('loss_ratio', sa.Float(), nullable=False),
     sa.Column('lossfile_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['lossfile_id'], ['histolossfile.id'], ),
@@ -116,21 +116,9 @@ def upgrade():
     sa.ForeignKeyConstraint(['resultfile_id'], ['resultfile.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('resultlayerxs',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('premium', sa.Integer(), nullable=False),
-    sa.Column('occ_limit', sa.Integer(), nullable=False),
-    sa.Column('occ_deduct', sa.Integer(), nullable=False),
-    sa.Column('agg_limit', sa.Integer(), nullable=False),
-    sa.Column('agg_deduct', sa.Integer(), nullable=False),
-    sa.Column('resultfile_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['resultfile_id'], ['resultfile.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('resultmodelfile',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('id_src', sa.Integer(), nullable=False),
+    sa.Column('id_src', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('type', sa.String(length=50), nullable=False),
     sa.Column('resultfile_id', sa.Integer(), nullable=False),
@@ -156,7 +144,6 @@ def upgrade():
     sa.Column('model_name', sa.String(length=50), nullable=False),
     sa.Column('year', sa.Integer(), nullable=False),
     sa.Column('type', sa.String(length=50), nullable=False),
-    sa.Column('loss_ratio', sa.Float(), nullable=False),
     sa.Column('gross', sa.Integer(), nullable=False),
     sa.Column('ceded', sa.Integer(), nullable=False),
     sa.Column('net', sa.Integer(), nullable=False),
@@ -182,7 +169,6 @@ def downgrade():
     op.drop_table('result_layer_modelfile')
     op.drop_table('riskprofile')
     op.drop_table('resultmodelfile')
-    op.drop_table('resultlayerxs')
     op.drop_table('resultlayer')
     op.drop_table('premium')
     op.drop_table('modelyearloss')
